@@ -1,122 +1,67 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+// Some code in this file was generated using AI
+
+import { useState, useEffect, useRef } from "react";
+import { drawGraph } from "./drawGraph";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [network, setNetwork] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const svgRef = useRef(null);
+
+  useEffect(() => {
+    console.log(
+      "Fetching sending GET request to http://127.0.0.1:5001/api/network",
+    );
+    fetch("http://127.0.0.1:5001/api/network")
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().then((errData) => {
+            throw new Error(errData.error || `HTTP error ${res.status}`);
+          });
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Fetched network data:", data);
+        setNetwork(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Fetch failed:", err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!network || !svgRef.current) return;
+
+    const cleanup = drawGraph(svgRef.current, network, 500, 500);
+
+    return cleanup;
+  }, [network]);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+      {/* Task 6.5: Title format with FSU branding */}
+      <p>Citation Network Visualization in FSU (mrb22p, Max Boyington)</p>
+      {loading && <p>Connecting to backend...</p>}
+
+      {error && (
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+          <strong>Error:</strong> {error}
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      )}
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      {network && (
+        <div>
+          <svg ref={svgRef}></svg>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      )}
+    </main>
+  );
 }
 
-export default App
+export default App;
